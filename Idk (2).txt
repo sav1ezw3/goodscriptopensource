@@ -1,0 +1,141 @@
+local s
+
+
+local function CreateGui()
+    s = Instance.new("ScreenGui")
+    s.Name = "WarSimGui"
+    s.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+
+
+    local f = Instance.new("Frame")
+    f.Size = UDim2.new(0.25, 0, 0.2, 0)
+    f.Position = UDim2.new(0.75, 0, 0.05, 0)
+    f.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    f.BackgroundTransparency = 0.5
+    f.Active = true
+    f.Draggable = true
+    f.Parent = s
+
+
+    local l = Instance.new("TextLabel")
+    l.Size = UDim2.new(1, 0, 0.1, 0)
+    l.Position = UDim2.new(0, 0, 0, 0)
+    l.Text = "Power Gui - War Sim"
+    l.Font = Enum.Font.SourceSansBold
+    l.TextSize = 20
+    l.TextColor3 = Color3.fromRGB(255, 255, 255)
+    l.BackgroundTransparency = 1
+    l.Parent = f
+
+
+    local t1 = Instance.new("TextButton")
+    t1.Size = UDim2.new(0.8, 0, 0.2, 0)
+    t1.Position = UDim2.new(0.1, 0, 0.3, 0)
+    t1.Text = "Hit Aura 🥊"
+    t1.Font = Enum.Font.SourceSans
+    t1.TextSize = 16
+    t1.TextColor3 = Color3.fromRGB(255, 255, 255)
+    t1.BackgroundColor3 = Color3.fromRGB(65, 105, 225)
+    t1.Parent = f
+
+
+    local t2 = Instance.new("TextButton")
+    t2.Size = UDim2.new(0.8, 0, 0.2, 0)
+    t2.Position = UDim2.new(0.1, 0, 0.6, 0)
+    t2.Text = "Auto Ready 🟢"
+    t2.Font = Enum.Font.SourceSans
+    t2.TextSize = 16
+    t2.TextColor3 = Color3.fromRGB(255, 255, 255)
+    t2.BackgroundColor3 = Color3.fromRGB(65, 105, 225)
+    t2.Parent = f
+
+
+    local hitAuraEnabled = false
+    local hitAuraLoop
+
+
+    local function ToggleHitAura()
+        hitAuraEnabled = not hitAuraEnabled
+        if hitAuraEnabled then
+            hitAuraLoop = game:GetService("RunService").Stepped:Connect(function()
+                game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Weapon"):WaitForChild("TakeDamage"):FireServer()
+            end)
+            t1.Text = "No Hit Aura 🥊"
+        else
+            if hitAuraLoop then
+                hitAuraLoop:Disconnect()
+                t1.Text = "Hit Aura 🥊"
+            end
+        end
+    end
+
+
+    t1.MouseButton1Click:Connect(function()
+        ToggleHitAura()
+    end)
+
+
+    local autoReadyEnabled = false
+    local autoReadyLoop
+
+
+    local function ToggleAutoReady()
+        autoReadyEnabled = not autoReadyEnabled
+        if autoReadyEnabled then
+            autoReadyLoop = game:GetService("RunService").Stepped:Connect(function()
+                local args = {[1] = 1}
+                game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Match"):WaitForChild("Join"):InvokeServer(unpack(args))
+            end)
+            t2.Text = "No Auto Ready 🟢"
+        else
+            if autoReadyLoop then
+                autoReadyLoop:Disconnect()
+                t2.Text = "Auto Ready 🟢"
+            end
+        end
+    end
+
+
+    t2.MouseButton1Click:Connect(function()
+        ToggleAutoReady()
+    end)
+end
+
+
+local function ShowGui()
+    if not s then
+        CreateGui()
+    end
+    s.Enabled = true
+end
+
+
+local function HideGui()
+    if s then
+        s.Enabled = false
+    end
+end
+
+
+game.Players.LocalPlayer.CharacterAdded:Connect(function()
+    ShowGui()
+end)
+
+
+game.Players.LocalPlayer.CharacterRemoving:Connect(function()
+    HideGui()
+end)
+
+
+game.Players.LocalPlayer.Character.Humanoid.Died:Connect(function()
+    HideGui()
+    wait(3)
+    if s then
+        s:Destroy()
+    end
+    CreateGui()
+end)
+
+
+ShowGui()
+
